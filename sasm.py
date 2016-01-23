@@ -81,7 +81,6 @@ class Lexer(object):
 
     def test(self):
         """Test the lexer"""
-        print("-----------------Testing lex")
         string = ""
         while self.current_token.type != EOF:
             string += "[{}] TOKEN ({}, {})\n".format(self.current_token.lineno,
@@ -101,6 +100,7 @@ if __name__ == '__main__':
 .X [] LD ST ADD BR BZ SUB HALT EI DI WAIT
 """
     # Create the lexer with some data
+    print("-----------------Testing lex")
     l = Lexer(data)
     msg = l.test()
     print(msg)
