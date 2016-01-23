@@ -2,7 +2,7 @@
 import ply.lex as lex
 
 
-COMMENT, EOL, EOF, UNKNOW = ('COMMENT', 'EOL', 'EOF', 'UNKNOW')
+COMMENT, EOL, EOF, UNKNOW, NUM = ('COMMENT', 'EOL', 'EOF', 'UNKNOW', 'NUM')
 
 
 class Lexer(object):
@@ -12,16 +12,14 @@ class Lexer(object):
        'EOL',
        'EOF',
        'UNKNOW',
-       'NUMDEC',
-       'NUMHEX',
-       'NUMOCT'
+       'NUM'
     )
 
     t_ignore = ' \t\r\f\v'
 
     # - Comments are ignored
     def t_COMMENT(self, t):
-        r';[^\n]*[\n]'
+        r';[^\n]+'
         t.type = 'COMMENT'
         t.value = t.value[1:]
         return t
@@ -48,16 +46,25 @@ class Lexer(object):
     def t_NUMDEC(self, t):
         r'[0-9]+'
         t.value = int(t.value)
+        t.type = NUM
         return t
 
     def t_NUMHEX(self, t):
         r"[hH]\'[0-9a-fA-F]+"
         t.value = int(t.value[2:], 16)
+        t.type = NUM
         return t
 
     def t_NUMOCT(self, t):
         r"[oO]\'[0-7]+"
         t.value = int(t.value[2:], 8)
+        t.type = NUM
+        return t
+
+    def t_NUMBIN(self, t):
+        r"[bB]\'[0-1]+"
+        t.value = int(t.value[2:], 2)
+        t.type = NUM
         return t
 
     def __init__(self, data):
@@ -75,30 +82,25 @@ class Lexer(object):
     def test(self):
         """Test the lexer"""
         print("-----------------Testing lex")
-
+        string = ""
         while self.current_token.type != EOF:
-            print(self.current_token)
+            string += "[{}] TOKEN ({}, {})\n".format(self.current_token.lineno,
+                                                     self.current_token.type,
+                                                     self.current_token.value)
             self.token()
+        return string
 
 
 # -- Main program
 if __name__ == '__main__':
 
-    data = '''
+    data = """
 ;-- Comentario
-.A , .X [] LD ST ADD BR BZ SUB HALT EI DI WAIT
-'''
-
-    data2 = '''
-;-- comentario 1
-;-- comentario 2
-.A  ;-- Comentario 3
-;-- Comentario 4
-2341 0 13443   1234
-h'f h'23 h'aa h'faca
-o'7 o'12
-'''
-
+.A , """
+    """
+.X [] LD ST ADD BR BZ SUB HALT EI DI WAIT
+"""
     # Create the lexer with some data
-    l = Lexer(data2)
-    l.test()
+    l = Lexer(data)
+    msg = l.test()
+    print(msg)
