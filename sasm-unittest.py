@@ -7,6 +7,7 @@ from sasm import Lexer
 def lexer_test(data):
     l = Lexer(data)
     log = l.test()
+    print(log)
     return log
 
 lex1 = ("""

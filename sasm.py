@@ -2,20 +2,38 @@
 import ply.lex as lex
 
 
-COMMENT, EOL, EOF, UNKNOW, NUM = ('COMMENT', 'EOL', 'EOF', 'UNKNOW', 'NUM')
+(COMMENT, EOL, EOF, UNKNOWN, NUM, COMMA, REG, LBRACK, RBRACK, LABEL, RESERVED, IMM) = (
+   'COMMENT', 'EOL', 'EOF', 'UNKNOW', 'NUM', 'COMMA', 'REG', 'LBRACK', 'RBRACK', 'LABEL',
+   'RESERVED', 'IMM')
+
+LD, ST, ADD, BR, BZ, SUB, HALT, EI, DI, WAIT = (
+  'LD', 'ST', 'ADD', 'BR', 'BZ', 'SUB', 'HALT', 'EI', 'DI', 'WAIT')
+
+reserved = [LD, ST, ADD, BR, BZ, SUB, HALT, EI, DI, WAIT]
 
 
 class Lexer(object):
 
-    tokens = (
-       'COMMENT',
-       'EOL',
-       'EOF',
-       'UNKNOW',
-       'NUM'
-    )
+    tokens = [
+       COMMENT,
+       EOL,
+       EOF,
+       UNKNOWN,
+       NUM,
+       COMMA,
+       REG,
+       LBRACK,
+       RBRACK,
+       LABEL,
+       RESERVED,
+       IMM
+    ]
 
     t_ignore = ' \t\r\f\v'
+
+    t_COMMA = r','
+    t_LBRACK = r'\['
+    t_RBRACK = r'\]'
 
     # - Comments are ignored
     def t_COMMENT(self, t):
@@ -43,6 +61,11 @@ class Lexer(object):
         t.lexer.skip(1)
         return t
 
+    def t_IMM(self, t):
+        r'\#[0-9]+'
+        t.value = int(t.value[1:])
+        return t
+
     def t_NUMDEC(self, t):
         r'[0-9]+'
         t.value = int(t.value)
@@ -65,6 +88,20 @@ class Lexer(object):
         r"[bB]\'[0-1]+"
         t.value = int(t.value[2:], 2)
         t.type = NUM
+        return t
+
+    def t_REG(self, t):
+        r'\.[aAxX]'
+        t.value = t.value[1:]
+        return t
+
+    def t_LABEL(self, t):
+        r'[a-zA-Z_][a-zA-Z_0-9]*'
+        if t.value.upper() in reserved:
+            t.type = 'RESERVED'
+            t.value = t.value.upper()
+        else:
+            t.type = LABEL
         return t
 
     def __init__(self, data):
@@ -95,10 +132,11 @@ if __name__ == '__main__':
 
     data = """
 ;-- Comentario
-.A , """
-    """
-.X [] LD ST ADD BR BZ SUB HALT EI DI WAIT
+.A , .X [] ld LD sT ST ADD BR BZ SUB HALT EI DI WAIT
+hola addr label
+#20 #43
 """
+
     # Create the lexer with some data
     print("-----------------Testing lex")
     l = Lexer(data)
