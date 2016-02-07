@@ -1,15 +1,19 @@
 #!/usr/bin/python3
 import ply.lex as lex
 
+# -- TOKEN definition
+(COMMENT, EOL, EOF, UNKNOWN, NUM, COMMA, REG, LBRACK, RBRACK, LABEL, RESERVED,
+    IMM) = (
+   'COMMENT', 'EOL', 'EOF', 'UNKNOW', 'NUM', 'COMMA', 'REG', 'LBRACK',
+   'RBRACK', 'LABEL', 'RESERVED', 'IMM')
 
-(COMMENT, EOL, EOF, UNKNOWN, NUM, COMMA, REG, LBRACK, RBRACK, LABEL, RESERVED, IMM) = (
-   'COMMENT', 'EOL', 'EOF', 'UNKNOW', 'NUM', 'COMMA', 'REG', 'LBRACK', 'RBRACK', 'LABEL',
-   'RESERVED', 'IMM')
+# -- Reserved words definition
+LD, ST, ADD, BR, BZ, SUB, HALT, EI, DI, WAIT, EQU, DATA, RES, ORG = (
+  'LD', 'ST', 'ADD', 'BR', 'BZ', 'SUB', 'HALT', 'EI', 'DI', 'WAIT',
+  'EQU', 'DATA', 'RES', 'ORG')
 
-LD, ST, ADD, BR, BZ, SUB, HALT, EI, DI, WAIT = (
-  'LD', 'ST', 'ADD', 'BR', 'BZ', 'SUB', 'HALT', 'EI', 'DI', 'WAIT')
-
-reserved = [LD, ST, ADD, BR, BZ, SUB, HALT, EI, DI, WAIT]
+reserved = [LD, ST, ADD, BR, BZ, SUB, HALT, EI, DI, WAIT,
+            EQU, DATA, RES, ORG]
 
 
 class Lexer(object):
@@ -61,9 +65,29 @@ class Lexer(object):
         t.lexer.skip(1)
         return t
 
-    def t_IMM(self, t):
+    # -- Immediate (in decimal)
+    def t_IMMDEC(self, t):
         r'\#[0-9]+'
         t.value = int(t.value[1:])
+        t.type = IMM
+        return t
+
+    def t_IMMHEX(self, t):
+        r'\#[hH]\'[0-9a-fA-F]+'
+        t.value = int(t.value[3:], 16)
+        t.type = IMM
+        return t
+
+    def t_IMMOCT(self, t):
+        r'\#[oO]\'[0-7]+'
+        t.value = int(t.value[3:], 8)
+        t.type = IMM
+        return t
+
+    def t_IMMBIN(self, t):
+        r'\#[bB]\'[0-1]+'
+        t.value = int(t.value[3:], 2)
+        t.type = IMM
         return t
 
     def t_NUMDEC(self, t):
@@ -131,11 +155,10 @@ class Lexer(object):
 if __name__ == '__main__':
 
     data = """
-;-- Comentario
-.A , .X [] ld LD sT ST ADD BR BZ SUB HALT EI DI WAIT
-hola addr label
-#20 #43
-"""
+    ;-- Other tokens
+    .A , .X []
+    hola addr label
+    """
 
     # Create the lexer with some data
     print("-----------------Testing lex")
