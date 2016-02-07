@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 import unittest
-from sasm import Lexer
+from sasmi4 import Lexer
 
 
 # -- Lexer tests
